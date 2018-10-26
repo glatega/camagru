@@ -1,0 +1,93 @@
+body {
+	background-image: linear-gradient(42deg, black, #7b0c0c);
+}
+#login-form {
+	margin: auto;
+	display: table;
+}
+.input-title {
+	text-shadow: 0px -2px #d8ff00;
+	color: #ff5600;
+	font-family: 'Bigelow Rules';
+	font-size: 10vw;
+	text-align: center;
+}
+.input-field {
+	font-family: 'Black And White Picture';
+	width: 100%;
+	font-size: 42px;
+	background: black;
+	border: 2px dashed #ff4300;
+	color: #9aff00;
+	letter-spacing: 5px;
+	text-align: center;
+}
+.input-field:focus {
+	box-shadow: 0px 0px 100px white;
+	outline: none;
+}
+.incorrect {
+	margin: 0;
+    text-align: center;
+    color: #ffff00;
+    position: relative;
+}
+#submit {
+	display: table;
+    margin: 20px auto;
+    background-image: url(../imgs/fire_gif.gif);
+    background-size: cover;
+    background-color: black;
+    min-width: 30%;
+    height: 50px;
+    color: #ffff00;
+    font-size: 25px;
+    border-radius: 50px;
+    border: 2px #ff4300;
+}
+#submit:focus {
+	outline: 0;
+}
+#submit:hover {
+	cursor: pointer;
+}
+.centralize {
+	position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.input-field:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 100px black inset;
+	-webkit-text-fill-color: #9aff00;
+}
+.create_account_btn {
+	text-align: center;
+}
+.create_account_btn p {
+	margin: 10px 0px 50px 0px;
+	color: yellow;
+    font-size: 35px;
+}
+.create_account_btn button {
+	background-color: #000000;
+    border: 1px solid #ff4300;
+    border-radius: 50px;
+}
+.create_account_btn button p {
+	color: #ff4300;
+    font-size: 30px;
+    margin: 0;
+    padding-bottom: 16px;
+    display: inline-block;
+}
+.cute_ghost {
+	position: relative;
+	top: 9px;
+	height: 40px;
+}
+.create_acc_btn {
+	outline: none;
+}
+.create_acc_btn:hover {
+	cursor: pointer;
+}
