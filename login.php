@@ -2,46 +2,30 @@
 
 	require("./connect.php");
 	session_start();
-	$_SESSION = array();
+	// $_SESSION = array();
+	// $_POST = array();
 
-	$db = new DB();
-	$conn = $db->connect();
-
-	$sql = "SELECT * FROM `accounts`";
-	$accounts = $conn->query($sql);
-
-	$select = $conn->prepare("SELECT `authenticate`.`valid` FROM `authenticate` INNER JOIN `accounts` ON `authenticate`.`acc_id` = `accounts`.`id` WHERE `accounts`.`name`=:name");
-	$select->bindParam(':name', $_POST["name"]);
-	$select->execute();
-	$valid = ($select->fetch(PDO::FETCH_ASSOC))["valid"];
+	$user = new USER();
 
 	$error = 0;
-	while($row = $accounts->fetch(PDO::FETCH_ASSOC))
-	{
-		if ($row["name"] == $_POST["name"])
-		{
-			$_SESSION["account"] = $_POST["name"];
-			if ((hash('whirlpool', $_POST['pw']) == $row["pw"]))
-			{
-				if ($valid == 1)
-				{
+	if (isset($_POST["name"])) {
+		$_SESSION["account"] = $_POST["name"];
+		if ($user->account_exists($_POST["name"])) {
+			if ($user->correct_password($_POST["name"], $_POST["pw"])) {
+				if ($user->is_valid($_POST["name"])) {
 					header('Location: ./home.phtml');
 					exit;
-				}
-				else
-				{
+				} else {
 					header('Location: ./unknown.html');
 					exit;
 				}
-			}
-			else
-			{
+			} else {
 				$error = 2;
 			}
+		} else {
+			$error = 1;
 		}
 	}
-	if (isset($_POST["name"]) && $error == 0)
-		$error = 1;
 
 ?>
 <html>

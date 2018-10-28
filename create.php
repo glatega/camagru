@@ -5,13 +5,14 @@
 	require("./connect.php");
 	require("./vendor/autoload.php");
 	session_start();
-	$_SESSION = array();
+	// $_SESSION = array();
 
-	$db = new DB();
-	$conn = $db->connect();
+	$user = new USER();
 
 	$sql = "SELECT * FROM `accounts`";
-	$accounts = $conn->query($sql);
+	$accounts = $user->connection->query($sql);
+	$name_exists = 0;
+	$email_exists = 0;
 	while($row = $accounts->fetch(PDO::FETCH_ASSOC))
 	{
 		if ($row["name"] == $_POST["name"])
@@ -25,7 +26,7 @@
 	}
 	if (!($name_exists || $email_exists) && isset($_POST["name"]))
 	{
-		$insert = $conn->prepare("INSERT INTO `accounts` (`name`, `pw`, `email`) VALUES (:username, :pw, :email)");
+		$insert = $user->connection->prepare("INSERT INTO `accounts` (`name`, `pw`, `email`) VALUES (:username, :pw, :email)");
 		$insert->bindParam(':username', $username);
 		$insert->bindParam(':pw', $password);
 		$insert->bindParam(':email', $email);
@@ -34,13 +35,13 @@
 		$email = $_POST["email"];
 		$insert->execute();
 
-		$select = $conn->prepare("SELECT `id` FROM `accounts` WHERE `email`=:email");
+		$select = $user->connection->prepare("SELECT `id` FROM `accounts` WHERE `email`=:email");
 		$select->bindParam(':email', $email);
 		$select->execute();
 		$acc_id = ($select->fetch(PDO::FETCH_ASSOC))["id"];
 		$token = rand();
 
-		$insert = $conn->prepare("INSERT INTO `authenticate` (`acc_id`, `token`) VALUES (:acc_id, :token)");
+		$insert = $user->connection->prepare("INSERT INTO `authenticate` (`acc_id`, `token`) VALUES (:acc_id, :token)");
 		$insert->bindParam(':acc_id', $acc_id);
 		$insert->bindParam(':token', $token);
 		$insert->execute();
@@ -97,7 +98,7 @@
 				<?php
 					if ($name_exists == 1)
 					{
-						echo "<p class='incorrect'>username already exists ლ(ಠ益ಠლ)</p>";
+						echo "<p class='incorrect'>username already taken ლ(ಠ益ಠლ)</p>";
 					}
 				?>
 				<input class="input-field" type="text" name="name" maxlength="42" required>
@@ -105,7 +106,7 @@
 				<?php
 					if ($email_exists == 1)
 					{
-						echo "<p class='incorrect'>email already exists ಠ_ಥ</p>";
+						echo "<p class='incorrect'>email already in use ಠ_ಥ</p>";
 					}
 				?>
 				<input class="input-field" type="email" name="email" maxlength="64" required>
