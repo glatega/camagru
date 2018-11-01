@@ -5,14 +5,14 @@
 	// $_SESSION = array();
 	// $_POST = array();
 
-	$user = new USER();
-
+	
 	$error = 0;
 	if (isset($_POST["name"])) {
+		$user = new USER("name", $_POST["name"]);
 		$_SESSION["account"] = $_POST["name"];
-		if ($user->account_exists($_POST["name"])) {
-			if ($user->correct_password($_POST["name"], $_POST["pw"])) {
-				if ($user->is_valid($_POST["name"])) {
+		if ($user->id) {
+			if ($user->correct_password($_POST["pw"])) {
+				if ($user->is_valid()) {
 					header('Location: ./home.phtml');
 					exit;
 				} else {
@@ -31,7 +31,7 @@
 <html>
 	<head>
 		<title>Camagru login</title>
-		<link rel="stylesheet" href="./css/login.css">
+		<link rel="stylesheet" href="./css/style.css">
 		<link href='https://fonts.googleapis.com/css?family=Bigelow Rules' rel='stylesheet'>
 		<link href='https://fonts.googleapis.com/css?family=Black And White Picture' rel='stylesheet'>
 	</head>

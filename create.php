@@ -1,81 +1,24 @@
 <?php
 
-	use PHPMailer\PHPMailer\PHPMailer;
-	use PHPMailer\PHPMailer\Exception;
 	require("./connect.php");
-	require("./vendor/autoload.php");
 	session_start();
-	// $_SESSION = array();
 
-	$user = new USER();
-
-	$sql = "SELECT * FROM `accounts`";
-	$accounts = $user->connection->query($sql);
 	$name_exists = 0;
 	$email_exists = 0;
-	while($row = $accounts->fetch(PDO::FETCH_ASSOC))
-	{
-		if ($row["name"] == $_POST["name"])
-		{
+	if (isset($_POST["name"])) {
+		$db = new CONNECTION();
+		if ($db->username_exists($_POST["name"])) {
 			$name_exists = 1;
 		}
-		if ($row["email"] == $_POST["email"])
-		{
+		if ($db->email_exists($_POST["email"])) {
 			$email_exists = 1;
 		}
-	}
-	if (!($name_exists || $email_exists) && isset($_POST["name"]))
-	{
-		$insert = $user->connection->prepare("INSERT INTO `accounts` (`name`, `pw`, `email`) VALUES (:username, :pw, :email)");
-		$insert->bindParam(':username', $username);
-		$insert->bindParam(':pw', $password);
-		$insert->bindParam(':email', $email);
-		$username = $_POST["name"];
-		$password = hash('whirlpool', $_POST["pw"]);
-		$email = $_POST["email"];
-		$insert->execute();
-
-		$select = $user->connection->prepare("SELECT `id` FROM `accounts` WHERE `email`=:email");
-		$select->bindParam(':email', $email);
-		$select->execute();
-		$acc_id = ($select->fetch(PDO::FETCH_ASSOC))["id"];
-		$token = rand();
-
-		$insert = $user->connection->prepare("INSERT INTO `authenticate` (`acc_id`, `token`) VALUES (:acc_id, :token)");
-		$insert->bindParam(':acc_id', $acc_id);
-		$insert->bindParam(':token', $token);
-		$insert->execute();
-
-		$hash = hash('whirlpool', $token);
-
-		$site = "http://localhost:8080/camagru/verify.php?user=" . $username . "&token=" . $hash;
-		$msg = "<html><body><p>Welcome to the CAMAGRU community, <strong>" . $username . "</strong></p><br><br>";
-		$msg .= "Before continuing on to make amazing pictures, please verify your email address by <a href='" . $site . "'>clicking here.</a></body></html>";
-
-		$mail = new PHPMailer();
-		$mail->IsSMTP();
-		$mail->SMTPDebug = 1;
-		$mail->SMTPAuth = true;
-		$mail->SMTPSecure = 'ssl';
-		$mail->Host = "smtp.gmail.com";
-		$mail->Port = 465;
-		$mail->IsHTML(true);
-		$mail->Username = "camagrurmdaba@gmail.com";
-		$mail->Password = "rootyroot";
-		$mail->SetFrom("camagrurmdaba@gmail.com");
-		$mail->Subject = "Email verification";
-		$mail->Body = $msg;
-		$mail->AddAddress($email);
-
-		if ($mail->Send())
-		{
-			header('Location: ./mail.php?email=sent');
-			exit;
-		}
-		else
-		{
-			$_SESSION["mail_fail"] = $mail->ErrorInfo;
-			header('Location: ./mail.php?email=failed');
+		if (!($name_exists || $email_exists)) {
+			if ($db->create_account($_POST["name"], $_POST["pw"], $_POST["email"])) {
+				header('Location: ./mail.php?email=sent');
+			} else {
+				header('Location: ./mail.php?email=failed');
+			}
 			exit;
 		}
 	}
@@ -83,15 +26,12 @@
 ?>
 <html>
 	<head>
-		<title>Create account</title>
-		<link rel="stylesheet" href="./css/login.css">
+		<title>Camagru</title>
+		<link rel="stylesheet" href="./css/style.css">
 		<link href='https://fonts.googleapis.com/css?family=Bigelow Rules' rel='stylesheet'>
 		<link href='https://fonts.googleapis.com/css?family=Black And White Picture' rel='stylesheet'>
 	</head>
 	<body>
-		<div style="color:white">
-			Create an account
-		</div>
 		<div class="centralize">
 			<form id="login-form" method="post">
 				<div class="input-title">Username</div>
