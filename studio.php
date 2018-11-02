@@ -77,17 +77,16 @@
 			white-space: nowrap;
     		overflow-x: scroll;
 		}
-		.overlay {
-			background-color: pink;
-			opacity: 0.5;
+		#overlay {
+			/* background-color: pink; */
+			/* opacity: 0.5; */
+			overflow: hidden;
 			position: absolute;
 			top: 3px;
 			left:3px;
 		}
-		#test {
-			position: relative;
-			/* top: 0px;
-			left: 0px; */
+		.mask {
+			position: inherit;
 		}
 		</style>
 		
@@ -95,9 +94,10 @@
 			<div id="cambox">
 				<div style="position: relative">
 					<canvas id="canvas" style="display:none"></canvas>
-					<div class="overlay">
-						<!-- <img onclick="clickEvent(event)" id="test" ondragstart="return false" draggable="true" width="auto" height="200px" src="imgs/masks/154099275565129024-6.png"> -->
-						<img id="test" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/masks/154099275565129024-6.png">
+					<div id="overlay">
+						<img class="mask" id="boo_kitty" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/masks/ghostbusters.png">
+						<img class="mask" id="witch_hat2" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/masks/fangs2.png">
+						<img class="mask" id="witch_hat" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/frames/web2.png">
 					</div>
 					<div id="camera_buttons">
 						<button class="buttpic" id="rainbow" style="background: url(./imgs/rainbow.svg)"></button>
@@ -105,59 +105,83 @@
 						<button class="buttpic" id="cancel" style="background: url(./imgs/trash.png); background-size: cover"></button>
 					</div>
 				</div>
+
 				<script>
 
-					var mouseDown = 0;
-					document.body.onmousedown = function() { 
-						mouseDown = 1;
-					}
-					document.body.onmouseup = function() {
-						mouseDown = 0;
+					function toggleMask(name) {
+						var newMask = document.createElement("img");
+						var att = document.createAttribute("class");
+						att.value = "mask";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("id");
+						att.value = name;
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("style");
+						att.value = "top: 0px; left: 0px;";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("draggable");
+						att.value = "true";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("width");
+						att.value = "auto";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("height");
+						att.value = "200px";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("ondragstart");
+						att.value = "startDragMask(event)";
+						newMask.setAttributeNode(att);
+						att = document.createAttribute("src");
+						att.value = "imgs/masks/" + name;
+						newMask.setAttributeNode(att);
+						overlay.appendChild(newMask);
 					}
 
-					test = document.querySelector("#test");
 					function startDragMask(e) {
 						e.preventDefault();
-						// e = Mouse click event.
-						// var rect = e.target.getBoundingClientRect();
 						targ = e.target;
-						// var x = e.clientX - rect.left; //x position within the element.
-						// var y = e.clientY - rect.top;  //y position within the element.
+						mask = document.getElementById(targ.id);
 						startX = e.clientX;
 						startY = e.clientY;
-						startLeft = parseInt(test.style.left, 10);
-						startTop = parseInt(test.style.top, 10);
-						console.log("x:" + startX + " - y:" + startY);
-						drag = true;
+						startLeft = parseInt(mask.style.left, 10);
+						startTop = parseInt(mask.style.top, 10);
+						targ.hold = true;
 						document.onmousemove = function(event) {dragMask(event)};
 						return false;
 					}
 
 					function dragMask(e) {
-						if (!drag) {return};
+						if (!targ.hold) {return};
 						var nowX = e.clientX;
 						var nowY = e.clientY;
-						targ.style.left= startLeft + (nowX-startX)+'px';
-						targ.style.top= startTop + (nowY-startY)+'px';
+						targ.style.left = startLeft + (nowX-startX)+'px';
+						targ.style.top = startTop + (nowY-startY)+'px';
 						return false;
 					}
 
 					function stopDrag() {
-						drag=false;
+						if (targ.classList.contains("mask")) {
+							overlayW = parseInt(overlay.style.width, 10);
+							overlayH = parseInt(overlay.style.height, 10);
+							maskW = targ.width;
+							maskH = targ.height;
+							maskL = parseInt(targ.style.left, 10);
+							maskT = parseInt(targ.style.top, 10);
+							if (maskL >= overlayW || maskL <= -maskW || maskT >= overlayH || maskT <= -maskH) {
+								removeElement(targ.id);
+								targ = document.querySelector("body");
+							}
+							targ.hold = false;
+						}
 					}
-					// test.addEventListener("mousedown", function(e) {
-					// 	console.log("mouse location:", e.clientX, e.clientY);
-					// 	var rect = e.target.getBoundingClientRect();
-					// 	var topp = window.getComputedStyle(test).top;
-					// 	// console.log(parseInt(test.style.top));
-					// 	// console.log(test.style.top);
-					// 	console.log(topp);
-					// 	// var a = test.style.top.substring(0, test.style.top.length - 2);
-					// 	a = parseInt(topp, 10);
-					// 	console.log(a);
-					// 	test.style.top = a + 10;
-					// });
+
+					function removeElement(id) {
+						var elem = document.getElementById(id);
+						elem.parentNode.removeChild(elem);
+					}
+
 				</script>
+
 				<script>
 					// test = document.querySelector("#test");
 					// function clickEvent(e) {
@@ -245,9 +269,10 @@
 					<div id="mask_box" style="display: none">
 						<?php
 							$masks = opendir(dirname(realpath(__FILE__)).'/imgs/masks/');
+							$q = "'";
 							while($mask = readdir($masks)){
 								if($mask !== '.' && $mask !== '..' && $mask !== '.DS_Store'){
-									echo '<img width="auto" height="200px" src="imgs/masks/'.$mask.'" border="0" />';
+									echo '<img onclick="toggleMask('.$q.$mask.$q.')" width="auto" height="200px" src="imgs/masks/'.$mask.'" border="0" />';
 								}
 							}
 							closedir($masks);
@@ -334,6 +359,7 @@
 		window.onload = function() {
 			
 			document.onmouseup = stopDrag;
+			targ = document.querySelector("body");
 
 			
 			
@@ -381,16 +407,14 @@
 				loopFrame = loopFrame || requestAnimationFrame(loop);
 			}
 
-			overlays = document.querySelectorAll('.overlay');
+			overlay = document.querySelector('#overlay');
 			
 			video.addEventListener('loadedmetadata',function(){
 				width = canvas.width = video.videoWidth;
 				height = canvas.height = video.videoHeight;
 				document.getElementById("canvas").setAttribute("style", "display:block;");
+				overlay.setAttribute("style", "width: " + width + "; height: " + height);
 				startLoop();
-				for (i = 0; i < overlays.length; i++) {
-					overlays[i].setAttribute("style", "width: " + width + "; height: " + height);
-				}
 			});
 			
 			document.querySelector('#snap').onclick = function() {
