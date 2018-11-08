@@ -1,6 +1,9 @@
-<?php require("./account_bar.php"); ?>
+<?php
+	require("./account_bar.php");
+	$newID = $user->get_last_pic_id() + 1;
+?>
 <style>
-#camera_buttons, #effects, video, canvas {
+#camera_buttons_bot, #effects, video, canvas {
 	max-width: 640px;
 	height: auto;
 	border: 3px solid;
@@ -11,11 +14,19 @@
 	margin: 10px 10%;
 	border: none;
 }
-#camera_buttons {
+#camera_buttons_bot {
 	text-align: center;
 	border: 3px solid;
 	border-top: none;
 	background-color: #cccccc;
+    border-radius: 0px 0px 100px 100px;
+}
+#camera_buttons_top {
+    text-align: center;
+    border: 3px solid;
+    border-bottom: none;
+    background-color: #cccccc;
+    border-radius: 100px 100px 0px 0px;
 }
 #cambox {
 	width: 646px;
@@ -85,6 +96,11 @@
 
 <div style="margin-top: 100px;">
 	<div id="cambox">
+		<div id="camera_buttons_top">
+			<button class="buttpic" id="rainbow" style="background: url(./imgs/resources/rainbow.svg)"></button>
+			<button class="buttpic" id="upload" style="background: url(./imgs/resources/picture.svg)"></button>
+			<!-- <button class="buttpic" id="xcancel" style="background: url(./imgs/resources/trash.png); background-size: cover"></button> -->
+		</div>
 		<div style="position: relative">
 			<canvas id="canvas" style="display:none"></canvas>
 			<div id="frame">
@@ -99,18 +115,67 @@
 				?>
 			</div>
 			<div id="overlay">
-				<!-- <img class="mask" id="boo_kitty" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/masks/ghostbusters.png">
-				<img class="mask" id="witch_hat2" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/masks/fangs2.png">
-				<img class="mask" id="witch_hat" style="top: 0px; left: 0px;" ondragstart="startDragMask(event)" draggable="true" width="auto" height="200px" src="imgs/frames/web2.png"> -->
 			</div>
-			<div id="camera_buttons">
-				<button class="buttpic" id="rainbow" style="background: url(./imgs/rainbow.svg)"></button>
-				<button class="buttpic" id="snap" style="background: url(./imgs/camera.svg)"></button>
-				<button class="buttpic" id="cancel" style="background: url(./imgs/trash.png); background-size: cover"></button>
+			<div id="camera_buttons_bot">
+				<button class="buttpic" id="save" onclick="savePic()" style="background: url(./imgs/resources/floppy.svg); background-size: cover;"></button>
+				<button class="buttpic" id="snap" style="background: url(./imgs/resources/camera.svg)"></button>
+				<button class="buttpic" id="cancel" style="background: url(./imgs/resources/trash.png); background-size: cover"></button>
 			</div>
 		</div>
 
+		<p id="test" style="color: white">
+				test
+		</p>
+
 		<script>
+
+			function savePic() {
+				// xhttp = new XMLHttpRequest();
+				// xhttp.open("POST", "./save.php", true);
+				// xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				// canvas = document.getElementById("canvas");
+				// data = canvas.toDataURL("image/png");
+				// // test = document.getElementById("test");
+				// // test.innerHTML = "user=<?php //echo $_SESSION["account"]; ?>&photo=" + data;
+				// // window.location.href=data;
+				// xhttp.send("user=<?php //echo $_SESSION["account"]; ?>&photo=" + data);
+
+				var stickerArray = [];
+
+				stickers = document.getElementById("overlay").childNodes;
+				stickers.forEach(function(sticker) {
+					if (sticker.nodeName == "IMG") {
+						scaleSize = sticker.style.transform;
+						scaleSize = scaleSize.substr(6);
+						scaleSize = scaleSize.substr(0, scaleSize.length-1);
+						// stickerArray[sticker.id.toString()] = {top:sticker.offsetTop.toString(), left:sticker.offsetLeft.toString(), scale:scaleSize.toString()};
+						
+						stickerArray.push(top:sticker.offsetTop.toString(), left:sticker.offsetLeft.toString(), scale:scaleSize.toString());
+					}
+				});
+				console.log(stickerArray);
+
+				var json = {
+					user: "<?php echo $_SESSION["account"]; ?>",
+					// image: canvas.toDataURL("image/png"),
+					masks: stickerArray,
+					liked: 1
+				}
+
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', 'save.php', true);
+				xhr.setRequestHeader('Content-type', 'application/json');
+				xhr.onreadystatechange = function (data) {
+					if (xhr.readyState == 4 && xhr.status == 200) {
+						console.log(xhr.responseText);
+						// b = xhr.responseText + "";
+						// b.replace(/<&#91;^>&#93;*>/g, "");
+						// document.getElementById('like_id').innerHTML = '';
+						// document.getElementById('like_id').innerHTML = b;
+					}
+				}
+				xhr.send(JSON.stringify(json))
+			}
 
 			function toggleFrame(name) {
 				frame = document.getElementById(name);
@@ -126,6 +191,26 @@
 				}
 			}
 
+			function scrollZoom(event) {
+				var stckr = event.target;
+				var scale = stckr.style.transform;
+				scale = scale.substr(6);
+				scale = scale.substr(0, scale.length-1);
+				console.log(scale);
+				if (event.deltaY > 0) {
+					console.log("+");
+					scale = scale * 1 + 0.1;
+					stckr.style.transform = "scale(" + scale + ")";
+				} else {
+					console.log("-");
+					scale = scale * 1 - 0.1;
+					stckr.style.transform = "scale(" + scale + ")";
+				}
+				if (scale <= 0) {
+					removeElement(event.target.id);
+				}
+			}
+
 			function toggleMask(name) {
 				if (!document.getElementById(name)) {
 					var newMask = document.createElement("img");
@@ -135,8 +220,11 @@
 					att = document.createAttribute("id");
 					att.value = name;
 					newMask.setAttributeNode(att);
+					att = document.createAttribute("onwheel");
+					att.value = "scrollZoom(event)";
+					newMask.setAttributeNode(att);
 					att = document.createAttribute("style");
-					att.value = "top: 0px; left: 0px;";
+					att.value = "top: 0px; left: 0px; transform: scale(1);";
 					newMask.setAttributeNode(att);
 					att = document.createAttribute("draggable");
 					att.value = "true";
@@ -205,13 +293,13 @@
 		<div id="effects">
 			<div id="effect_btns">
 				<div id="filter_btn" onclick="clickEffect('filter_btn')" class="effect_btn">
-					<img width="auto" height="35px" src="./imgs/filter.svg">
+					<img width="auto" height="35px" src="./imgs/resources/filter.svg">
 				</div><!-- 
 				--><div id="mask_btn" onclick="clickEffect('mask_btn')" class="effect_btn">
-					<img width="auto" height="35px" src="./imgs/mask.svg">
+					<img width="auto" height="35px" src="./imgs/resources/mask.svg">
 				</div><!-- 
 				--><div id="frame_btn" onclick="clickEffect('frame_btn')" class="effect_btn">
-					<img width="auto" height="35px" src="./imgs/frame.svg">
+					<img width="auto" height="35px" src="./imgs/resources/frame.svg">
 				</div>
 			</div>
 			<table id="filter_box" style="display: none">
@@ -337,7 +425,8 @@ document.querySelector('#rainbow').onclick = function() {
 
 canvas = document.getElementById('canvas');
 
-var filterControls = document.querySelectorAll('.filters');
+filterControls = document.querySelectorAll('.filters');
+
 function applyFilter() {
 	var computedFilters = '';
 	filterControls.forEach(function(item, index) {

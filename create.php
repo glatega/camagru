@@ -57,9 +57,9 @@
 			<div class="create_account_btn">
 				<p>or</p>
 				<button class="create_acc_btn" onclick="window.location.href='./login.php'">
-					<img class="cute_ghost" src="./imgs/cute_ghost_left.gif">
+					<img class="cute_ghost" src="./imgs/resources/cute_ghost_left.gif">
 						<p>Login</p>
-					<img class="cute_ghost" src="./imgs/cute_ghost_right.gif">
+					<img class="cute_ghost" src="./imgs/resources/cute_ghost_right.gif">
 				</button>
 			</div>
 		</div>

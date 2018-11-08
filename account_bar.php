@@ -45,16 +45,16 @@
 		<?php echo $_SESSION["account"]; ?>
 	</td>
 	<td id="bar_settings" onclick="clickSettings()">
-		<img id="menu_icon" height="50px" width="50px" src="./imgs/menu_icon_h.svg">
+		<img id="menu_icon" height="50px" width="50px" src="./imgs/resources/menu_icon_h.svg">
 	</td>
 </table>
 <div id="settings_drop">
 	<div onclick="gotoPage('settings.php')">
-		<img class="menu_img" height="25px" width="25px" src="./imgs/settings_gears.svg">
+		<img class="menu_img" height="25px" width="25px" src="./imgs/resources/settings_gears.svg">
 		Settings
 	</div>
 	<div onclick="gotoPage('logout.php')" id="logout">
-		<img class="menu_img" height="25px" width="25px" src="./imgs/logout.svg">
+		<img class="menu_img" height="25px" width="25px" src="./imgs/resources/logout.svg">
 		Logout
 	</div>
 </div>

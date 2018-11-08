@@ -159,7 +159,7 @@ class CONNECTION extends SERVER
 
 		$sql = $this->connection->prepare("INSERT INTO `user_settings` (`acc_id`, `profile_pic`) VALUES (:acc_id, :profile_pic)");
 		$sql->bindParam(':acc_id', $acc_id);
-		$profile_pic = "imgs/default_pumpkin.png";
+		$profile_pic = "imgs/resources/default_pumpkin.png";
 		$sql->bindParam(':profile_pic', $profile_pic);
 		$sql->execute();
 
@@ -260,6 +260,14 @@ class USER extends SERVER
 
 	public function __destruct() {
 		$this->connection = NULL;
+	}
+
+	public function get_last_pic_id() {
+		$sql = $this->connection->prepare("SELECT `id` FROM `pictures` WHERE `acc_id` = :id ORDER BY `id` DESC LIMIT 1");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$lastID = $sql->fetch(PDO::FETCH_ASSOC);
+		return ($lastID['id']);
 	}
 }
 
