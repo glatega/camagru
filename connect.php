@@ -263,11 +263,18 @@ class USER extends SERVER
 	}
 
 	public function get_last_pic_id() {
-		$sql = $this->connection->prepare("SELECT `id` FROM `pictures` WHERE `acc_id` = :id ORDER BY `id` DESC LIMIT 1");
+		$sql = $this->connection->prepare("SELECT COUNT(*) AS `total` FROM `pictures` WHERE `acc_id` = :id");
 		$sql->bindParam(":id", $this->id);
 		$sql->execute();
-		$lastID = $sql->fetch(PDO::FETCH_ASSOC);
-		return ($lastID['id']);
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		return ($result['total']);
+	}
+
+	public function upload_picture($picture_name) {
+		$sql = $this->connection->prepare("INSERT INTO `pictures`(`addr`, `acc_id`) VALUES (:picture_name, :id)");
+		$sql->bindParam(":id", $this->id);
+		$sql->bindParam(":picture_name", $picture_name);
+		$sql->execute();
 	}
 }
 
