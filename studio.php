@@ -1,7 +1,4 @@
-<?php
-	require("./account_bar.php");
-	$newID = $user->get_last_pic_id() + 1;
-?>
+<?php require("./account_bar.php"); ?>
 <style>
 #camera_buttons_bot, #effects, video, canvas {
 	max-width: 640px;

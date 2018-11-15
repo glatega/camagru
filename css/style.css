@@ -36,7 +36,7 @@ body {
 #submit {
 	display: table;
     margin: 20px auto;
-    background-image: url(../imgs/fire_gif.gif);
+    background-image: url(../imgs/resources/fire_gif.gif);
     background-size: cover;
     background-color: black;
     min-width: 30%;
