@@ -3,19 +3,83 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 require("./vendor/autoload.php");
-require("./database.php");
 
 class SERVER
 {
-	protected $connection;
-	protected $DB_DSN = "mysql";
-	protected $DB_HOST = "localhost";
-	protected $DB_NAME = "camagru";
-	protected $DB_USER = "root";
-	protected $DB_PASSWORD = "admin1";
+	protected $servername = "localhost";
+	protected $dbname = "camagru";
+	protected $admin_username = "root";
+	protected $admin_password = "admin1";
 
 	public function __construct() {
-		$this->connection = new PDO("$this->DB_DSN:host=$this->DB_HOST;dbname=$this->DB_NAME", $this->DB_USER, $this->DB_PASSWORD);
+		
+		try	{
+			$conn = new PDO("mysql:host=$this->servername", $this->admin_username, $this->admin_password);
+			$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		}
+		catch (PDOException $e)	{
+			die("Connection failed: " . $e->getMessage());
+		}
+
+		$conn->query("CREATE DATABASE IF NOT EXISTS `camagru`");
+		$conn = NULL;
+		$conn = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->admin_username, $this->admin_password);
+		
+		$sql = "CREATE TABLE IF NOT EXISTS `accounts` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`name` VARCHAR(32) NOT NULL,
+			`pw` VARCHAR(128) NOT NULL,
+			`email` VARCHAR(64) NOT NULL,
+			`creation_date` DATETIME DEFAULT NOW());";
+		$conn->query($sql);
+
+		$sql = "CREATE TABLE IF NOT EXISTS `authenticate` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`acc_id` INT NOT NULL,
+			`valid` INT DEFAULT 0,
+			`token` int NOT NULL);";
+		$conn->query($sql);
+		
+		$sql = "CREATE TABLE IF NOT EXISTS `pictures` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`addr` VARCHAR(100) NOT NULL,
+			`acc_id` INT NOT NULL,
+			`creation_date` DATETIME DEFAULT NOW());";
+		$conn->query($sql);
+		
+		$sql = "CREATE TABLE IF NOT EXISTS `likes` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`acc_id` INT NOT NULL,
+			`pic_id` INT NOT NULL ;";
+		$conn->query($sql);
+		
+		$sql = "CREATE TABLE IF NOT EXISTS `comments` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`acc_id` INT NOT NULL,
+			`pic_id` INT NOT NULL,
+			`message` VARCHAR(500) NOT NULL,
+			`creation_date` DATETIME DEFAULT NOW());";
+		$conn->query($sql);
+		
+		$sql = "CREATE TABLE IF NOT EXISTS `masks` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`addr` VARCHAR(100) NOT NULL);";
+		$conn->query($sql);
+
+		$sql = "CREATE TABLE IF NOT EXISTS `user_settings` (
+			PRIMARY KEY (id),
+			`id` INT AUTO_INCREMENT,
+			`acc_id` INT NOT NULL,
+			`profile_pic` VARCHAR(100) NOT NULL,
+			`email_likes` INT DEFAULT 1,
+			`email_comments` INT DEFAULT 1);";
+		$conn->query($sql);
 	}
 
 	protected function send_mail($email, $subject, $message) {
@@ -40,23 +104,15 @@ class SERVER
 			return (0);
 		}
 	}
-
-	public function email_exists($email) {
-		$sql = $this->connection->prepare("SELECT `id` FROM `accounts` WHERE `email` = :email");
-		$sql->bindParam(":email", $email);
-		$sql->execute();
-		if ($sql->rowCount() > 0) {
-			return (1);
-		} else {
-			return (0);
-		}
-	}
 }
 
 class CONNECTION extends SERVER
 {
+	public $connection;
+
 	public function __construct() {
 		parent::__construct();
+		$this->connection = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->admin_username, $this->admin_password);
 	}
 
 	public function username_exists($username) {
@@ -128,11 +184,14 @@ class CONNECTION extends SERVER
 
 class USER extends SERVER
 {
+
+	public $connection;
 	public $id;
 	public $username;
 
 	public function __construct($column, $value) {
 		parent::__construct();
+		$this->connection = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->admin_username, $this->admin_password);
 		if ($column == "name") {
 			$sql = $this->connection->prepare("SELECT `id`, `name` FROM `accounts` WHERE `name` = :value");
 		} elseif ($column == "id") {
@@ -217,68 +276,22 @@ class USER extends SERVER
 		$sql->bindParam(":picture_name", $picture_name);
 		$sql->execute();
 	}
-
-	public function liked_pictures() {
-		$sql = $this->connection->prepare("SELECT `likes`.`pic_id` FROM `likes` WHERE `likes`.`acc_id` = :id");
-		$sql->bindParam(":id", $this->id);
-		// $sql->execute();
-		// $results = $sql->fetch(PDO::FETCH_ASSOC);
-		// return ($results);
-		$sql->execute();
-		$results = array();
-		while ($result = $sql->fetch(PDO::FETCH_ASSOC)) {
-			array_push($results, $result["pic_id"]);
-		}
-		return ($results);
-	}
-
-	public function like_update($img_id, $action) {
-		if ($action == "add") {
-			$sql = $this->connection->prepare("INSERT INTO `likes`(`acc_id`, `pic_id`) VALUES (:id, :img)");
-			$sql->bindParam(":id", $this->id);
-			$sql->bindParam(":img", $img_id);
-			$sql->execute();
-		} else if ($action == "subtract") {
-			$sql = $this->connection->prepare("DELETE FROM `likes` WHERE `likes`.`acc_id` = :id AND `likes`.`pic_id` = :img");
-			$sql->bindParam(":id", $this->id);
-			$sql->bindParam(":img", $img_id);
-			$sql->execute();
-		}
-	}
-
-	public function save_comment($img_id, $comment) {
-		$sql = $this->connection->prepare("INSERT INTO `comments`(`acc_id`, `pic_id`, `message`) VALUES (:id, :pic_id, :comment)");
-		$sql->bindParam(":id", $this->id);
-		$sql->bindParam(":pic_id", $img_id);
-		$sql->bindParam(":comment", $comment);
-		$sql->execute();
-	}
 }
 
 class GALLERY extends SERVER
 {
-	public function fetch_all_imgs() {
-		$sql = $this->connection->prepare("
-		SELECT `pictures`.`addr`, `pictures`.`creation_date`, `pictures`.`id`, `accounts`.`name`, COMMENTS.`comments`, LIKES.`likes`
-			FROM `pictures`
-				INNER JOIN `accounts`
-					ON `accounts`.`id` = `pictures`.`acc_id`
-				LEFT JOIN 
-					(SELECT `pic_id`, COUNT(*) AS `comments` FROM `comments` GROUP BY `comments`.`pic_id`) AS COMMENTS
-						ON COMMENTS.`pic_id` = `pictures`.`id`
-				LEFT JOIN 
-					(SELECT `pic_id`, COUNT(*) AS `likes` FROM `likes` GROUP BY `likes`.`pic_id`) AS LIKES
-						ON LIKES.`pic_id` = `pictures`.`id`
-			ORDER BY `pictures`.`creation_date`
-			DESC
-		");
+	public $connection;
 
-		//SELECT COUNT(`comments`.`id`) AS "comments", `pictures`.`id` AS "picture_id" FROM `pictures` LEFT JOIN `comments` ON `comments`.`pic_id` = `pictures`.`id` GROUP BY `pictures`.`id`
+	public function __construct() {
+		parent::__construct();
+		$this->connection = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->admin_username, $this->admin_password);
+	}
+
+	public function fetch_all_imgs($username) {
+		$sql = $this->connection->prepare("SELECT `pictures`.`addr`, `pictures`.`creation_date`, `pictures`.`id` FROM `pictures` INNER JOIN `accounts` ON `accounts`.`id` = `pictures`.`acc_id` WHERE `accounts`.`name` = :user");
+		$sql->bindParam(':user', $username);
 		$sql->execute();
-		$pictures = array();
-		while ($picture = $sql->fetch(PDO::FETCH_ASSOC)) {
-			array_push($pictures, $picture);
-		}
+		$pictures = $sql->fetch(PDO::FETCH_ASSOC);
 		return ($pictures);
 	}
 
@@ -296,17 +309,6 @@ class GALLERY extends SERVER
 		$sql->execute();
 		$likes = $sql->fetch(PDO::FETCH_ASSOC);
 		return ($likes);
-	}
-
-	public function get_img_comments($img_id) {
-		$sql = $this->connection->prepare('SELECT `comments`.`message`, `accounts`.`name` FROM `comments` INNER JOIN `accounts` ON `accounts`.`id` = `comments`.`acc_id` WHERE `comments`.`pic_id` = :img_id ORDER BY `comments`.`creation_date` ASC');
-		$sql->bindParam(':img_id', $img_id);
-		$sql->execute();
-		$comments = array();
-		while ($comment = $sql->fetch(PDO::FETCH_ASSOC)) {
-			array_push($comments, $comment);
-		}
-		return ($comments);
 	}
 }
 
