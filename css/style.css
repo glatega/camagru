@@ -113,7 +113,7 @@ body {
 	color: #ff5600;
 	font-family: 'Comfortaa', cursive;
 }
-#bar_settings {
+.bar_links {
 	width: 75px;
 }
 #menu_icon {
@@ -144,4 +144,120 @@ body {
 .menu_img {
 	position: relative;
 	top: 8px;
+}
+@media screen and (min-width: 600px) {
+	.pic_container {
+		width: 40%;
+	}
+}
+
+@media screen and (min-width: 1000px) {
+	.pic_container {
+		width: 30%;
+	}
+}
+
+#pictures {
+	text-align: center;
+}
+.pic_container {
+	margin: 10px;
+	display: inline-block;
+}
+.picture {
+	width: 100%;
+}
+.likes_and_comments {
+	text-align: center;
+	height: 50px;
+	background-color: #9a4625;
+}
+.likes {
+	float: left;
+	margin: 10px;
+}
+.comments {
+	float: right;
+	margin: 10px;
+}
+.num_likes {
+	float: right;
+    line-height: 30px;
+	margin-left: 10px;
+	font-family: sans-serif;
+    font-weight: bold;
+    color: #ffc85d;
+}
+.num_comments {
+	float: left;
+    line-height: 30px;
+	margin-right: 10px;
+	font-family: sans-serif;
+    font-weight: bold;
+    color: #ffc85d;
+}
+.pointer {
+	cursor: pointer;
+}
+#page_bar {
+	text-align: center;
+	display: inline-block;
+    background-color: #a83f16;
+	margin: 15px;
+	border-radius: 50px;
+    overflow: hidden;
+}
+.page_item {
+	display: inline-block;
+	padding: 10px;
+    font-weight: bold;
+}
+.page_item:hover {
+	background-color: #f9832e;
+}
+#detailed_image {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding-top: 10vh;
+    top: 91px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+#image_box {
+    display: inline-block;
+	background-color: #a07c6d;
+	position: relative;
+}
+#exploded_image {
+	max-width: 100%;
+}
+.username {
+	font-weight: bold;
+    text-decoration: underline;
+}
+.comment {
+	margin: 10px;
+    background-color: #eaa972;
+	text-align: left;
+    padding: 5px;
+}
+.message {
+	margin: 5px;
+}
+#add_comment {
+	margin: 5px;
+}
+#type_comment {
+	width: calc(100% - 42px);
+    height: 42px;
+	float: left;
+	border-radius: 42px;
+    padding-left: 15px;
+	outline: none;
+}
+#delete_me {
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }

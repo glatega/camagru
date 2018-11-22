@@ -3,23 +3,21 @@
 <div id="pictures">
 	<?php
 
-		$gallery = new GALLERY();
-		$images = $gallery->fetch_all_imgs();
+		$images = $user->fetch_my_imgs();
 		$mylikes = $user->liked_pictures();
 		$pages = ceil(count($images)/5);
 
 		echo '<div style="text-align: center">';
 		echo '<div id="page_bar">';
-		// echo '<div class="page_item">'.ceil(count($images)/5).'</div>';
 		for ($x = 1; $x <= $pages; $x++) {
-			$url = "window.location.href='./gallery.php?page=".$x."'";
+			$url = "window.location.href='./mygallery.php?page=".$x."'";
 			echo '<div ';
 			if ($_GET["page"] == $x) {
 				echo 'style="color:white"';
 			}
 			echo ' class="page_item" onclick="'.$url.'">'.$x.'</div>';
 		}
-		$url = "window.location.href='./gallery.php?page=all'";
+		$url = "window.location.href='./mygallery.php?page=all'";
 		echo '<div ';
 		if ($_GET["page"] == "all") {
 			echo 'style="color:white"';
@@ -35,7 +33,6 @@
 			if (isset($_GET["page"]) && $_GET["page"] != "all") {
 				$max = ($_GET["page"] * 5);
 				$min = $max - 4;
-				// echo $min." -> ".$max;
 				if ($x > $max || $x < $min) {
 					continue;
 				}
@@ -81,7 +78,7 @@
 <div id="detailed_image" style="display: none">
 	<div id="image_box" visibility="false">
 		<img id="exploded_image" pic_id="" src="">
-		
+		<img id="delete_me" onclick="deleteMe(this)" src="imgs/resources/trash.png" width="auto" height="30px" border="0" />
 		<div class="likes_and_comments">
 			<div class="likes">
 				<div class="num_likes">
@@ -127,6 +124,27 @@
 			}
 		}
 	});
+
+	function deleteMe($this) {
+		if (confirm("Are you sure you want to delete this image?")) {
+			$pic_id = $this.parentElement.querySelector('#exploded_image').getAttribute("pic_id");
+			console.log($pic_id);
+
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', 'delete.php?id=' + $pic_id, true);
+			xhr.setRequestHeader('Content-type', 'application/json');
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState == 4 && xhr.status == 200) {
+					console.log(xhr.responseText);
+
+					document.getElementById($pic_id).parentElement.style.display = "none";
+					document.getElementById("detailed_image").style.display = "none";
+					document.getElementById("image_box").setAttribute("visibility", "false");
+				}
+			}
+			xhr.send();
+		}
+	}
 
 	function clickBigLike($this) {
 		$real_btn_id = $this.parentElement.parentElement.parentElement.querySelector('#exploded_image').getAttribute("pic_id");

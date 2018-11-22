@@ -38,13 +38,22 @@
 </head>
 <body>
 <table id="bar">
-	<td id="bar_pp">
-		<img height="75px" width="75px" src="./<?php echo $settings["profile_pic"]; ?>">
-	</td>
+	<!-- <td id="bar_pp">
+		<img height="75px" width="75px" src="./<?php //echo $settings["profile_pic"]; ?>">
+	</td> -->
 	<td id="bar_name">
 		<?php echo $_SESSION["account"]; ?>
 	</td>
-	<td id="bar_settings" onclick="clickSettings()">
+	<td class="bar_links" onclick="window.location.href='./studio.php'">
+		<img style="cursor:pointer" height="50px" width="50px" src="./imgs/resources/camera.png">
+	</td>
+	<td class="bar_links" onclick="window.location.href='./mygallery.php?page=1'">
+		<img style="cursor:pointer" height="50px" width="50px" src="./imgs/resources/home.svg">
+	</td>
+	<td class="bar_links" onclick="window.location.href='./gallery.php?page=1'">
+		<img style="cursor:pointer" height="50px" width="50px" src="./imgs/resources/globe.svg">
+	</td>
+	<td class="bar_links" onclick="clickSettings()">
 		<img id="menu_icon" height="50px" width="50px" src="./imgs/resources/menu_icon_h.svg">
 	</td>
 </table>

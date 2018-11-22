@@ -221,9 +221,6 @@ class USER extends SERVER
 	public function liked_pictures() {
 		$sql = $this->connection->prepare("SELECT `likes`.`pic_id` FROM `likes` WHERE `likes`.`acc_id` = :id");
 		$sql->bindParam(":id", $this->id);
-		// $sql->execute();
-		// $results = $sql->fetch(PDO::FETCH_ASSOC);
-		// return ($results);
 		$sql->execute();
 		$results = array();
 		while ($result = $sql->fetch(PDO::FETCH_ASSOC)) {
@@ -253,6 +250,43 @@ class USER extends SERVER
 		$sql->bindParam(":comment", $comment);
 		$sql->execute();
 	}
+
+	public function delete_picture($img_id) {
+		$sql = $this->connection->prepare("DELETE FROM `pictures` WHERE `id` = :img_id");
+		$sql->bindParam(":img_id", $img_id);
+		$sql->execute();
+		$sql = $this->connection->prepare("DELETE FROM `comments` WHERE `pic_id` = :img_id");
+		$sql->bindParam(":img_id", $img_id);
+		$sql->execute();
+		$sql = $this->connection->prepare("DELETE FROM `likes` WHERE `pic_id` = :img_id");
+		$sql->bindParam(":img_id", $img_id);
+		$sql->execute();
+	}
+
+	public function fetch_my_imgs() {
+		$sql = $this->connection->prepare("
+		SELECT `pictures`.`addr`, `pictures`.`creation_date`, `pictures`.`id`, `accounts`.`name`, COMMENTS.`comments`, LIKES.`likes`
+			FROM `pictures`
+				INNER JOIN `accounts`
+					ON `accounts`.`id` = `pictures`.`acc_id`
+				LEFT JOIN 
+					(SELECT `pic_id`, COUNT(*) AS `comments` FROM `comments` GROUP BY `comments`.`pic_id`) AS COMMENTS
+						ON COMMENTS.`pic_id` = `pictures`.`id`
+				LEFT JOIN 
+					(SELECT `pic_id`, COUNT(*) AS `likes` FROM `likes` GROUP BY `likes`.`pic_id`) AS LIKES
+						ON LIKES.`pic_id` = `pictures`.`id`
+			WHERE `pictures`.`acc_id` = :id
+			ORDER BY `pictures`.`creation_date`
+			DESC
+		");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$pictures = array();
+		while ($picture = $sql->fetch(PDO::FETCH_ASSOC)) {
+			array_push($pictures, $picture);
+		}
+		return ($pictures);
+	}
 }
 
 class GALLERY extends SERVER
@@ -272,8 +306,6 @@ class GALLERY extends SERVER
 			ORDER BY `pictures`.`creation_date`
 			DESC
 		");
-
-		//SELECT COUNT(`comments`.`id`) AS "comments", `pictures`.`id` AS "picture_id" FROM `pictures` LEFT JOIN `comments` ON `comments`.`pic_id` = `pictures`.`id` GROUP BY `pictures`.`id`
 		$sql->execute();
 		$pictures = array();
 		while ($picture = $sql->fetch(PDO::FETCH_ASSOC)) {

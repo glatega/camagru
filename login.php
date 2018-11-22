@@ -13,11 +13,11 @@
 		if ($user->id) {
 			if ($user->correct_password($_POST["pw"])) {
 				if ($user->is_valid()) {
-					header('Location: ./home.phtml');
+					header('Location: ./mygallery.php?page=1');
 					exit;
 				} else {
-					header('Location: ./unknown.html');
-					exit;
+					// header('Location: ./unknown.html');
+					// exit;
 				}
 			} else {
 				$error = 2;
