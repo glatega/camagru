@@ -3,7 +3,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 require("./vendor/autoload.php");
-require("./database.php");
+require("./config/database.php");
 
 class SERVER
 {
@@ -29,7 +29,7 @@ class SERVER
 		$mail->IsHTML(true);
 		$mail->Username = "camagrurmdaba@gmail.com";
 		$mail->Password = "rootyroot";
-		$mail->SetFrom("camagrurmdaba@gmail.com");
+		$mail->SetFrom("camagrurmdaba@gmail.com", "Camagru Team");
 		$mail->Subject = $subject;
 		$mail->Body = $message;
 		$mail->AddAddress($email);
@@ -235,6 +235,7 @@ class USER extends SERVER
 			$sql->bindParam(":id", $this->id);
 			$sql->bindParam(":img", $img_id);
 			$sql->execute();
+			$this->send_like_email($img_id, $this->id);
 		} else if ($action == "subtract") {
 			$sql = $this->connection->prepare("DELETE FROM `likes` WHERE `likes`.`acc_id` = :id AND `likes`.`pic_id` = :img");
 			$sql->bindParam(":id", $this->id);
@@ -249,6 +250,39 @@ class USER extends SERVER
 		$sql->bindParam(":pic_id", $img_id);
 		$sql->bindParam(":comment", $comment);
 		$sql->execute();
+		$this->send_comment_email($img_id, $this->id);
+	}
+
+	public function send_comment_email($img_id, $user_id) {
+		$sql = $this->connection->prepare("SELECT `pictures`.`acc_id`, `accounts`.`name`, `accounts`.`email`, `user_settings`.`email_comments` FROM `pictures` INNER JOIN `accounts` ON `pictures`.`acc_id` = `accounts`.`id` INNER JOIN `user_settings` ON `user_settings`.`acc_id` = `accounts`.`id` WHERE `pictures`.`id` = :img_id");
+		$sql->bindParam(":img_id", $img_id);
+		$sql->execute();
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		$img_users_id = $result["acc_id"];
+		$img_users_name = $result["name"];
+		$comment_status = $result["email_comments"];
+		if ($img_users_id != $user_id && $comment_status == 1) {
+			$email = $result["email"];
+			$subject = "New comment";
+			$message = "Hey ".$img_users_name.", one of your pictures just got commented on by ".$this->username;
+			parent::send_mail($email, $subject, $message);
+		}
+	}
+
+	public function send_like_email($img_id, $user_id) {
+		$sql = $this->connection->prepare("SELECT `pictures`.`acc_id`, `accounts`.`name`, `accounts`.`email`, `user_settings`.`email_likes` FROM `pictures` INNER JOIN `accounts` ON `pictures`.`acc_id` = `accounts`.`id` INNER JOIN `user_settings` ON `user_settings`.`acc_id` = `accounts`.`id` WHERE `pictures`.`id` = :img_id");
+		$sql->bindParam(":img_id", $img_id);
+		$sql->execute();
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		$img_users_id = $result["acc_id"];
+		$img_users_name = $result["name"];
+		$like_status = $result["email_likes"];
+		if ($img_users_id != $user_id && $like_status == 1) {
+			$email = $result["email"];
+			$subject = "New like";
+			$message = "Hey ".$img_users_name.", ".$this->username." just liked one of your pictures!";
+			parent::send_mail($email, $subject, $message);
+		}
 	}
 
 	public function delete_picture($img_id) {
@@ -287,6 +321,101 @@ class USER extends SERVER
 		}
 		return ($pictures);
 	}
+
+	public function get_account_details() {
+		$sql = $this->connection->prepare("SELECT `accounts`.`name`, `accounts`.`email`, `user_settings`.`email_comments` AS 'commentable', `user_settings`.`email_likes` AS 'likeable' FROM `accounts` INNER JOIN `user_settings` ON `accounts`.`id` = `user_settings`.`acc_id` WHERE `accounts`.`id` = :id");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$details = $sql->fetch(PDO::FETCH_ASSOC);
+		return ($details);
+	}
+
+	public function is_new_name_taken($name) {
+		$sql = $this->connection->prepare("SELECT COUNT(*) AS 'rows' FROM `accounts` WHERE `name` = :username AND `id` != :id");
+		$sql->bindParam(":username", $name);
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$results = $sql->fetch(PDO::FETCH_ASSOC);
+		return ($results["rows"]);
+	}
+
+	public function is_new_email_taken($email) {
+		$sql = $this->connection->prepare("SELECT COUNT(*) AS 'rows' FROM `accounts` WHERE `email` = :email AND `id` != :id");
+		$sql->bindParam(":email", $email);
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$results = $sql->fetch(PDO::FETCH_ASSOC);
+		return ($results["rows"]);
+	}
+
+	public function update_details($name, $comment, $like) {
+		$sql = $this->connection->prepare("UPDATE `accounts` SET `name`=:username WHERE `id` = :id");
+		$sql->bindParam(":username", $name);
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$sql = $this->connection->prepare("UPDATE `user_settings` SET `email_comments`=:email_c, `email_likes`=:email_l WHERE `id` = :id");
+		$sql->bindParam(":email_c", $comment);
+		$sql->bindParam(":email_l", $like);
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$this->username = $name;
+	}
+
+	public function save_new_PW($pw, $token) {
+		$sql = $this->connection->prepare("SELECT `token` FROM `authenticate` WHERE `acc_id` = :id");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		$dbtoken = $result["token"];
+
+		if (hash("whirlpool", $dbtoken) == $token) {
+			$hashed_pw = hash("whirlpool", $pw);
+			$sql = $this->connection->prepare("UPDATE `accounts` SET `pw`=:pw WHERE `id` = :id");
+			$sql->bindParam(":pw", $hashed_pw);
+			$sql->bindParam(":id", $this->id);
+			$sql->execute();
+			return (1);
+		} else {
+			return (0);
+		}
+	}
+
+	public function update_email($email) {
+		$sql = $this->connection->prepare("SELECT `token` FROM `authenticate` WHERE `acc_id` = :id");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		$token = $result["token"];
+		$sql = $this->connection->prepare("UPDATE `authenticate` SET `valid`='0' WHERE `acc_id` = :id");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$sql = $this->connection->prepare("UPDATE `accounts` SET `email`=:email WHERE `id` = :id");
+		$sql->bindParam(":email", $email);
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+
+		$subject = "Email verification";
+		$url = "http://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . "/camagru/verify.php?user=" . $this->username . "&token=" . hash('whirlpool', $token);
+		$message = "<html><body><p>Hey <strong>" . $this->username . "</strong></p><br><br>";
+		$message .= "To verify your new email address just <a href='" . $url . "'>click here.</a></body></html>";
+		parent::send_mail($email, $subject, $message);
+	}
+
+	public function send_PW_reset_email() {
+		$sql = $this->connection->prepare("SELECT `authenticate`.`token`, `accounts`.`email` FROM `accounts` INNER JOIN `authenticate` ON `accounts`.`id` = `authenticate`.`acc_id` WHERE `accounts`.`id` = :id");
+		$sql->bindParam(":id", $this->id);
+		$sql->execute();
+		$result = $sql->fetch(PDO::FETCH_ASSOC);
+		$token = $result["token"];
+		$email = $result["email"];
+
+		$subject = "Password reset";
+		$url = "http://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . "/camagru/reset_pw.php?user=" . $this->username . "&token=" . hash('whirlpool', $token);
+		$message = "<html><body><p>Hey <strong>" . $this->username . "</strong></p><br><br>";
+		$message .= "To reset your password <a href='" . $url . "'>click here.</a></body></html>";
+		parent::send_mail($email, $subject, $message);
+	}
+
 }
 
 class GALLERY extends SERVER

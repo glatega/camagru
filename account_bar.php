@@ -37,6 +37,7 @@
 	<link href="https://fonts.googleapis.com/css?family=Comfortaa" rel="stylesheet">
 </head>
 <body>
+
 <table id="bar">
 	<!-- <td id="bar_pp">
 		<img height="75px" width="75px" src="./<?php //echo $settings["profile_pic"]; ?>">
@@ -62,8 +63,10 @@
 		<img class="menu_img" height="25px" width="25px" src="./imgs/resources/settings_gears.svg">
 		Settings
 	</div>
-	<div onclick="gotoPage('logout.php')" id="logout">
+	<div onclick="gotoPage('index.php')" id="logout">
 		<img class="menu_img" height="25px" width="25px" src="./imgs/resources/logout.svg">
 		Logout
 	</div>
 </div>
+
+<div id="window">

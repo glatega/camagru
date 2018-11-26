@@ -598,5 +598,5 @@ window.onload = function() {
 
 window.onunload = function() {}
 </script>
-</body>
-</html>
+
+<?php require("./footer.php"); ?>

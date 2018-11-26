@@ -16,8 +16,7 @@
 					header('Location: ./mygallery.php?page=1');
 					exit;
 				} else {
-					// header('Location: ./unknown.html');
-					// exit;
+					$error = 3;
 				}
 			} else {
 				$error = 2;
@@ -68,6 +67,12 @@
 						}
 					?>
 				><br>
+				<?php
+					if ($error == 3)
+					{
+						echo "<p class='incorrect'>Please validate your account before continuing</p>";
+					}
+				?>
 				<input id="submit" type="submit" value="Login" required><br>
 			</form>
 			<div class="create_account_btn">

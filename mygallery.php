@@ -109,6 +109,8 @@
 	</div>
 </div>
 
+<?php require("./footer.php"); ?>
+
 <script>
 
 	$image_box = document.querySelector('#image_box');
@@ -128,15 +130,11 @@
 	function deleteMe($this) {
 		if (confirm("Are you sure you want to delete this image?")) {
 			$pic_id = $this.parentElement.querySelector('#exploded_image').getAttribute("pic_id");
-			console.log($pic_id);
-
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', 'delete.php?id=' + $pic_id, true);
 			xhr.setRequestHeader('Content-type', 'application/json');
 			xhr.onreadystatechange = function () {
 				if (xhr.readyState == 4 && xhr.status == 200) {
-					console.log(xhr.responseText);
-
 					document.getElementById($pic_id).parentElement.style.display = "none";
 					document.getElementById("detailed_image").style.display = "none";
 					document.getElementById("image_box").setAttribute("visibility", "false");

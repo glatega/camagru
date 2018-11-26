@@ -15,11 +15,9 @@
 		}
 		if (!($name_exists || $email_exists)) {
 			if ($db->create_account($_POST["name"], $_POST["pw"], $_POST["email"])) {
-				header('Location: ./mail.php?email=sent');
-			} else {
-				header('Location: ./mail.php?email=failed');
+				header('Location: ./mail.php');
+				exit;
 			}
-			exit;
 		}
 	}
 
@@ -51,8 +49,9 @@
 				?>
 				<input class="input-field" type="email" name="email" maxlength="64" required>
 				<div class="input-title">Password</div>
-				<input class="input-field" type="password" name="pw" required><br>
-				<input id="submit" type="submit" value="Create account" required>
+				<p id="pwcomplexity" style="visibility: inherit;" class='incorrect'>Password must contain at least one uppercase letter, lowercase letter and number</p>
+				<input class="input-field" type="password" name="pw" oninput="passwordComplexity(this.value)" required><br>
+				<input id="submit" type="submit" value="Create account" disabled="disabled" required>
 			</form>
 			<div class="create_account_btn">
 				<p>or</p>
@@ -64,4 +63,20 @@
 			</div>
 		</div>
 	</body>
+	<script>
+	function passwordComplexity($pw) {
+		$upper = /[A-Z]{1,}/.test($pw) ? 1 : 0;
+		$lower = /[a-z]{1,}/.test($pw) ? 1 : 0;
+		$number = /[0-9]{1,}/.test($pw) ? 1 : 0;
+		$warning = document.getElementById("pwcomplexity");
+		$submit = document.getElementById("submit");
+		if ($upper && $lower && $number) {
+			$warning.setAttribute("style", "visibility: hidden;");
+			$submit.removeAttribute("disabled");
+		} else {
+			$warning.setAttribute("style", "visibility: inherit;");
+			$submit.setAttribute("disabled", "disabled");
+		}
+	}
+	</script>
 </html>

@@ -1,25 +1,35 @@
-<?php require("./account_bar.php"); ?>
-
+<?php require("./connect.php"); ?>
+<html>
+<head>
+	<title>Camagru</title>
+	<link rel="stylesheet" href="./css/style.css">
+	<link href='https://fonts.googleapis.com/css?family=Bigelow Rules' rel='stylesheet'>
+	<link href='https://fonts.googleapis.com/css?family=Black And White Picture' rel='stylesheet'>
+	<link href="https://fonts.googleapis.com/css?family=Comfortaa" rel="stylesheet">
+</head>
+<body>
+<div id="window">
+<div id="camagru" onclick="window.location = './index.php'">
+	<p style="margin: 0px">CAMAGRU</p>
+</div>
 <div id="pictures">
 	<?php
 
 		$gallery = new GALLERY();
 		$images = $gallery->fetch_all_imgs();
-		$mylikes = $user->liked_pictures();
 		$pages = ceil(count($images)/5);
 
 		echo '<div style="text-align: center">';
 		echo '<div id="page_bar">';
-		// echo '<div class="page_item">'.ceil(count($images)/5).'</div>';
 		for ($x = 1; $x <= $pages; $x++) {
-			$url = "window.location.href='./gallery.php?page=".$x."'";
+			$url = "window.location.href='./public_gallery.php?page=".$x."'";
 			echo '<div ';
 			if ($_GET["page"] == $x) {
 				echo 'style="color:white"';
 			}
 			echo ' class="page_item" onclick="'.$url.'">'.$x.'</div>';
 		}
-		$url = "window.location.href='./gallery.php?page=all'";
+		$url = "window.location.href='./public_gallery.php?page=all'";
 		echo '<div ';
 		if ($_GET["page"] == "all") {
 			echo 'style="color:white"';
@@ -35,7 +45,6 @@
 			if (isset($_GET["page"]) && $_GET["page"] != "all") {
 				$max = ($_GET["page"] * 5);
 				$min = $max - 4;
-				// echo $min." -> ".$max;
 				if ($x > $max || $x < $min) {
 					continue;
 				}
@@ -52,12 +61,8 @@
 				echo $image["likes"];
 			}
 			echo '</div>';
-			echo '<img class="pointer" onclick="clickLike(this)" src="imgs/resources/';
-			if (in_array($image["id"], $mylikes)) {
-				echo 'likes_me.png" liked="yes"';
-			} else {
-				echo 'likes_me_not.png" liked="no"';
-			}
+			echo '<img class="pointer" src="imgs/resources/';
+			echo 'likes_me.png" liked="yes"';
 			echo ' width="auto" height="30px" border="0" />';
 			echo '</div>';
 			echo '<div class="comments">';
@@ -86,7 +91,7 @@
 			<div class="likes">
 				<div class="num_likes">
 				</div>
-				<img class="pointer" onclick="clickBigLike(this)" src="imgs/resources/likes_me.png" liked="" width="auto" height="30px" border="0" />
+				<img class="pointer" src="imgs/resources/likes_me.png" liked="" width="auto" height="30px" border="0" />
 			</div>
 			<div class="comments">
 				<div class="num_comments">
@@ -104,10 +109,6 @@
 					I love you, Princess
 				</div>
 			</div>
-		</div>
-		<div id="add_comment">
-			<textarea id="type_comment" placeholder="Write a comment..."></textarea>
-			<img onclick="submitComment(this)" src="./imgs/resources/paper-plane.svg" width="42px" height="42px">
 		</div>
 	</div>
 </div>
@@ -129,49 +130,6 @@
 			}
 		}
 	});
-
-	function clickBigLike($this) {
-		$real_btn_id = $this.parentElement.parentElement.parentElement.querySelector('#exploded_image').getAttribute("pic_id");
-		$real_btn = document.getElementById($real_btn_id).parentElement.querySelector('.likes_and_comments').querySelector('.likes').querySelector('.pointer');
-		$real_btn.click();
-		$parent = $this.parentElement;
-		$childlike = $parent.querySelector('.num_likes');
-		if ($this.getAttribute("liked") == "yes") {
-			$this.setAttribute("liked", "no");
-			$this.setAttribute("src", "imgs/resources/likes_me_not.png");
-			$childlike.innerHTML -= 1;
-		} else {
-			$this.setAttribute("liked", "yes");
-			$this.setAttribute("src", "imgs/resources/likes_me.png");
-			$childlike.innerHTML = parseInt($childlike.innerHTML) + 1;
-		}
-	}
-
-	function submitComment($this) {
-		$textarea = $this.parentElement.querySelector('#type_comment');
-		$picID = $this.parentElement.parentElement.querySelector('#exploded_image').getAttribute("pic_id");
-		if ($textarea.value.length > 0) {
-			var json = {
-				user: "<?php echo $_SESSION["account"]; ?>",
-				image: $picID,
-				comment: $textarea.value
-			}
-
-			var xhr = new XMLHttpRequest();
-			xhr.open('POST', 'comment.php', true);
-			xhr.setRequestHeader('Content-type', 'application/json');
-			xhr.onreadystatechange = function (data) {
-				if (xhr.readyState == 4 && xhr.status == 200) {
-					var comments = document.getElementById('comment_box').innerHTML + '<div class="comment"><div class="username"><?php echo $_SESSION["account"]; ?></div><div class="message">'+$textarea.value+'</div></div>';
-					document.getElementById('comment_box').innerHTML = comments;
-					$textarea.value = "";
-					$comm_num = $this.parentElement.parentElement.querySelector('.likes_and_comments').querySelector('.comments').querySelector('.num_comments');
-					$comm_num.innerHTML = parseInt($comm_num.innerHTML) + 1;
-				}
-			}
-			xhr.send(JSON.stringify(json));
-		}
-	}
 
 	function gotoImg($img_elem) {
 		$exploded_img = document.getElementById("exploded_image");
@@ -202,29 +160,4 @@
 		}, 100);
 	}
 
-	function clickLike($this) {
-		$parent = $this.parentElement;
-		$childlike = $parent.querySelector('.num_likes');
-		if ($this.getAttribute("liked") == "yes") {
-			$this.setAttribute("liked", "no");
-			$this.setAttribute("src", "imgs/resources/likes_me_not.png");
-			$childlike.innerHTML -= 1;
-			$like = "subtract";
-		} else {
-			$this.setAttribute("liked", "yes");
-			$this.setAttribute("src", "imgs/resources/likes_me.png");
-			$childlike.innerHTML = parseInt($childlike.innerHTML) + 1;
-			$like = "add";
-		}
-		$img = $parent.parentElement.parentElement.querySelector('.picture').id;
-		var json = {
-			user: "<?php echo $_SESSION["account"]; ?>",
-			image: $img,
-			like: $like
-		}
-		var xhr = new XMLHttpRequest();
-		xhr.open('POST', 'like.php', true);
-		xhr.setRequestHeader('Content-type', 'application/json');
-		xhr.send(JSON.stringify(json));
-	}
 </script>
